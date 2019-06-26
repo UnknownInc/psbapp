@@ -6,11 +6,13 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
-require('update-electron-app')({
-  repo: 'UnknownInc/psbapp',
-  updateInterval: '1 hour',
-  //logger: require('electron-log')
-})
+if (!isDev) {
+  require('update-electron-app')({
+    repo: 'UnknownInc/psbapp',
+    updateInterval: '1 hour',
+    //logger: require('electron-log')
+  })
+}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -20,7 +22,7 @@ const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 700,
   });
 
   // and load the index.html of the app.
