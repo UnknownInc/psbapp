@@ -27,7 +27,7 @@ const createWindow = () => {
 
   // and load the index.html of the app.
   //mainWindow.loadURL(`file://${__dirname}/index.html`);
-  mainWindow.loadURL('http://localhost:3000/');
+  mainWindow.loadURL('https://psb.prod.rmcloudsoftware.com');
 
   // Open the DevTools.
   if (isDev) {
