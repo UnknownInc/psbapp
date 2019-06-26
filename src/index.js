@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const isDev = require('electron-is-dev');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -14,11 +14,22 @@ if (!isDev) {
   })
 }
 
+app.setLoginItemSettings({
+  openAtLogin: true,
+})
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+let onlineStatusWindow;
 
 const createWindow = () => {
+
+  if (onlineStatusWindow===null) {
+    onlineStatusWindow = new BrowserWindow({ width: 0, height: 0, show: false })
+    onlineStatusWindow.loadURL(`file://${__dirname}/online-status.html`)
+  }
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 800,
@@ -42,6 +53,10 @@ const createWindow = () => {
     mainWindow = null;
   });
 };
+
+ipcMain.on('online-status-changed', (event, status) => {
+  console.log(status)
+})
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
