@@ -13,7 +13,7 @@
     "lint": "echo \"No linting configured\""
   },
   "keywords": [],
-  "author": "rakravur",
+  "author": "Publicis Sapient Engineering",
   "license": "MIT",
   "config": {
     "forge": "./forge.config.js"

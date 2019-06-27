@@ -32,8 +32,8 @@ module.exports = {
             name: '@electron-forge/publisher-github',
             config: {
                 repository: {
-                owner: 'UnknownInc',
-                name: 'psbapp'
+                    owner: 'UnknownInc',
+                    name: 'psbapp'
                 },
                 prerelease: true
             }
