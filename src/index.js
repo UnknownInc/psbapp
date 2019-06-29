@@ -18,11 +18,12 @@ if (!isDev) {
 app.setLoginItemSettings({
   openAtLogin: true,
 })
-
+app.dock.hide();
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let onlineStatusWindow;
+let refresh=false;
 
 const createWindow = () => {
 
@@ -100,6 +101,10 @@ const startShowTimer = (interval) => {
   }
   showTimerId = setInterval(()=>{
     showMainWindow();
+    if (refresh) {
+      mainWindow.refresh(true);
+      refresh=false;
+    }
   }, interval)
 }
 
@@ -130,6 +135,7 @@ app.handleMessage = (event, message)=>{
         tomorrow.setDate(today.getDate()+1);
         tomorrow.setHours(8,Math.trunc(Math.random()*59),0)
         let timeinms=tomorrow.getTime()-today.getTime();
+        refresh=true;
         startShowTimer(timeinms);
       }
       break;
@@ -153,10 +159,8 @@ app.on('window-all-closed', () => {
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     //app.quit();
-    
-    //TODO: startShowTimer for tomorrow
-    startShowTimer(10*60000);
   }
+  startShowTimer(10*60000);
 });
 
 app.on('activate', () => {
@@ -167,5 +171,8 @@ app.on('activate', () => {
   }
 });
 
+app.on('before-quit', (e)=>{
+  e.preventDefault();
+})
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
