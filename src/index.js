@@ -15,6 +15,7 @@ if (!isDev) {
   })
 }
 
+
 app.setLoginItemSettings({
   openAtLogin: true,
 })
@@ -23,7 +24,8 @@ app.dock.hide();
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 let onlineStatusWindow;
-let refresh=false;
+let firstTime = true;
+let refresh = false;
 
 const createWindow = () => {
 
@@ -47,6 +49,7 @@ const createWindow = () => {
       preload: interopScript,
     }
   });
+  mainWindow.removeMenu();
 
   // and load the index.html of the app.
   //mainWindow.loadURL(`file://${__dirname}/index.html`);
@@ -60,7 +63,6 @@ const createWindow = () => {
   // startShowTimer(showMainWindow, 15000);
   // Open the DevTools.
   if (isDev) {
-    mainWindow.webContents.openDevTools();
     if (BrowserWindow.getDevToolsExtensions().hasOwnProperty('devtron')) {
       require('devtron').install()
     }
@@ -69,6 +71,7 @@ const createWindow = () => {
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
     console.log('mainWindow: closed');
+    refresh=true;
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
@@ -83,11 +86,17 @@ ipcMain.on('online-status-changed', (event, status) => {
 
 const showMainWindow = () => {
   console.log('SW');
+  firstTime=false;
   if (mainWindow!==null) {
     mainWindow.show()
     mainWindow.moveTop();
+    if (refresh) {
+      refresh=false;
+      mainWindow.reload();
+    }
     console.log('mainWindow: show')
   } else  {
+    refresh=false;
     createWindow();
     mainWindow.show();
   }
@@ -101,10 +110,6 @@ const startShowTimer = (interval) => {
   }
   showTimerId = setInterval(()=>{
     showMainWindow();
-    if (refresh) {
-      mainWindow.refresh(true);
-      refresh=false;
-    }
   }, interval)
 }
 
@@ -123,7 +128,7 @@ app.handleMessage = (event, message)=>{
       startShowTimer(20*60000);
       break;
     case 'HasQuestions':
-      showMainWindow();
+      showMainWindow()
       startShowTimer(10*60000);
       break;
     case 'FinishedQuestions':{
