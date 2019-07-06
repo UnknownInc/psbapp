@@ -19,7 +19,16 @@ if (!isDev) {
 app.setLoginItemSettings({
   openAtLogin: true,
 })
-app.dock.hide();
+
+
+try {
+  if (app.dock && app.dock.hide) {
+    app.dock.hide();
+  } 
+} catch(err){
+  console.log(err);
+}
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -43,13 +52,14 @@ const createWindow = () => {
     useContentSize: true,
     center: true,
     show: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
+    alwaysOnTop: false,
+    skipTaskbar: false,
     webPreferences: {
       preload: interopScript,
     }
   });
   mainWindow.removeMenu();
+
 
   // and load the index.html of the app.
   //mainWindow.loadURL(`file://${__dirname}/index.html`);
@@ -129,6 +139,8 @@ app.handleMessage = (event, message)=>{
       break;
     case 'HasQuestions':
       showMainWindow()
+      mainWindow.alwaysOnTop = true;
+      mainWindow.skipTaskbar = true;
       startShowTimer(10*60000);
       break;
     case 'FinishedQuestions':{
