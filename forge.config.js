@@ -2,6 +2,8 @@ const { utils: { fromBuildIdentifier } } = require('@electron-forge/core');
 
 module.exports = {
     "buildIdentifier": process.env.IS_BETA ? 'beta' : 'prod',
+    "asar": true,
+    "platform": 'all',
     "packagerConfig": {
       "appBundleId": fromBuildIdentifier({ beta: 'com.rmcloudsoftware.beta.psb', prod: 'com.rmcloudsoftware.psb' })
     },
@@ -14,9 +16,10 @@ module.exports = {
       },
       {
         "name": "@electron-forge/maker-zip",
-        "platforms": [
-          "darwin"
-        ]
+        // "platforms": [
+        //   "darwin",
+        //   "windows"
+        // ]
       },
       {
         "name": "@electron-forge/maker-deb",
