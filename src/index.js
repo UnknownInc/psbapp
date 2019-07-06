@@ -98,17 +98,18 @@ const showMainWindow = () => {
   console.log('SW');
   firstTime=false;
   if (mainWindow!==null) {
-    mainWindow.show()
-    mainWindow.moveTop();
+    console.log('mainWindow: show')
     if (refresh) {
       refresh=false;
       mainWindow.reload();
     }
-    console.log('mainWindow: show')
+    mainWindow.show()
+    mainWindow.moveTop();
   } else  {
     refresh=false;
     createWindow();
     mainWindow.show();
+    mainWindow.moveTop();
   }
 }
 
@@ -135,17 +136,23 @@ app.handleMessage = (event, message)=>{
       break;
     case 'NotLoggedIn':
       showMainWindow();
+      mainWindow.setAlwaysOnTop(false);
+      mainWindow.setSkipTaskbar(false);
       startShowTimer(20*60000);
       break;
     case 'HasQuestions':
       showMainWindow()
-      mainWindow.alwaysOnTop = true;
-      mainWindow.skipTaskbar = true;
+      mainWindow.setAlwaysOnTop(true);
+      mainWindow.setSkipTaskbar(true);
       startShowTimer(10*60000);
       break;
     case 'FinishedQuestions':{
         if (showTimerId) {
           clearInterval(showTimerId);
+        }
+        if (mainWindow) {
+          mainWindow.setAlwaysOnTop(false);
+          mainWindow.setSkipTaskbar(false);
         }
         let today = new Date();
         let tomorrow = new Date();
@@ -177,7 +184,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     //app.quit();
   }
-  startShowTimer(10*60000);
+  //startShowTimer(10*60000);
 });
 
 app.on('activate', () => {
