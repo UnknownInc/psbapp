@@ -7,13 +7,13 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
-if (!isDev) {
-  require('update-electron-app')({
-    repo: 'UnknownInc/psbapp',
-    updateInterval: '1 hour',
-    //logger: require('electron-log')
-  })
-}
+// if (!isDev) {
+//   require('update-electron-app')({
+//     repo: 'UnknownInc/psbapp',
+//     updateInterval: '1 hour',
+//     //logger: require('electron-log')
+//   })
+// }
 
 
 app.setLoginItemSettings({
@@ -51,7 +51,7 @@ const createWindow = () => {
     height: 700,
     useContentSize: true,
     center: true,
-    show: false,
+    show: true,
     alwaysOnTop: false,
     skipTaskbar: false,
     webPreferences: {
