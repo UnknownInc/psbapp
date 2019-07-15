@@ -18,6 +18,20 @@ module.exports = {
         }
       },
       {
+        name: '@electron-forge/maker-dmg',
+        config: {
+          name:'psb',
+          icon:"images/psb.icns",
+          background: './images/DmgBkg.png',
+          overwite: true,
+          additionalDMGOptions:{
+          }
+        }
+      },
+      {
+        name: '@electron-forge/maker-wix',
+      },
+      {
         "name": "@electron-forge/maker-zip",
         // "platforms": [
         //   "darwin",

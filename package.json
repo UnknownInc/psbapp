@@ -24,13 +24,15 @@
     "update-electron-app": "^1.4.2"
   },
   "devDependencies": {
-    "@electron-forge/publisher-github": "^6.0.0-beta.39",
     "@electron-forge/cli": "6.0.0-beta.39",
     "@electron-forge/maker-deb": "6.0.0-beta.39",
+    "@electron-forge/maker-dmg": "^6.0.0-beta.41",
     "@electron-forge/maker-rpm": "6.0.0-beta.39",
     "@electron-forge/maker-squirrel": "6.0.0-beta.39",
+    "@electron-forge/maker-wix": "^6.0.0-beta.41",
     "@electron-forge/maker-zip": "6.0.0-beta.39",
-    "electron": "5.0.6",
-    "devtron": "^1.4.0"
+    "@electron-forge/publisher-github": "^6.0.0-beta.39",
+    "devtron": "^1.4.0",
+    "electron": "5.0.6"
   }
 }
