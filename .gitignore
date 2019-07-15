@@ -1,2 +1,4 @@
 node_modules
 out
+*.p12
+*.cer
