@@ -5,7 +5,7 @@ module.exports = {
     "asar": true,
     "platform": 'all',
     "packagerConfig": {
-      "appCopyright":"Copyright (c) 2019 piblicis sapient.",
+      "appCopyright":"Copyright (c) 2019 publicis sapient.",
       "appBundleId": fromBuildIdentifier({ beta: 'com.rmcloudsoftware.beta.psb', prod: 'com.rmcloudsoftware.psb' }),
       "appCategoryType": "public.app-category.business",
       "icon":"images/psb",
