@@ -90,7 +90,7 @@ const createWindow = () => {
 };
 
 ipcMain.on('online-status-changed', (event, status) => {
-  console.log(status)
+  console.log(status);
 })
 
 
@@ -103,22 +103,27 @@ const showMainWindow = () => {
       refresh=false;
       mainWindow.reload();
     }
-    mainWindow.show()
-    mainWindow.moveTop();
   } else  {
     refresh=false;
     createWindow();
-    mainWindow.show();
-    mainWindow.moveTop();
   }
+  mainWindow.show();
+  mainWindow.moveTop();
 }
 
+let lastInterval;
 let showTimerId;
 const startShowTimer = (interval) => {
   console.log('T:'+interval);
-  if (showTimerId) {
-    clearInterval(showTimerId);
+  try {
+    if (showTimerId) {
+      clearInterval(showTimerId);
+    }
+  } catch(err) {
+    console.error(err);
   }
+
+  lastInterval=interval;
   showTimerId = setInterval(()=>{
     showMainWindow();
   }, interval)
@@ -147,9 +152,14 @@ app.handleMessage = (event, message)=>{
       startShowTimer(10*60000);
       break;
     case 'FinishedQuestions':{
-        if (showTimerId) {
-          clearInterval(showTimerId);
+        try {
+          if (showTimerId) {
+            clearInterval(showTimerId);
+          } 
+        } catch(err) {
+          console.error(err);
         }
+
         if (mainWindow) {
           mainWindow.setAlwaysOnTop(false);
           mainWindow.setSkipTaskbar(false);
@@ -184,7 +194,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     //app.quit();
   }
-  //startShowTimer(10*60000);
+  startShowTimer(lastInterval || (10*60000));
 });
 
 app.on('activate', () => {
