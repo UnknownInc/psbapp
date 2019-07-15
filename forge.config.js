@@ -11,12 +11,12 @@ module.exports = {
       "icon":"images/psb",
     },
     "makers": [
-      {
-        "name": "@electron-forge/maker-squirrel",
-        "config": {
-          "name": "psbapp"
-        }
-      },
+      // {
+      //   "name": "@electron-forge/maker-squirrel",
+      //   "config": {
+      //     "name": "psbapp"
+      //   }
+      // },
       {
         name: '@electron-forge/maker-dmg',
         config: {
@@ -30,6 +30,9 @@ module.exports = {
       },
       {
         name: '@electron-forge/maker-wix',
+        config:{
+          appUserModelId:'com.rmcloudsoftware.psb'
+        }
       },
       {
         "name": "@electron-forge/maker-zip",
