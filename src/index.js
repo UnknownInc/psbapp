@@ -1,5 +1,5 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const isDev = require('electron-is-dev');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -66,7 +66,8 @@ const createWindow = () => {
   if (process.env.NODE_ENV==='dev'){
     mainWindow.loadURL('http://localhost:3000');
   } else {
-    mainWindow.loadURL('https://psb.prod.rmcloudsoftware.com');
+    //mainWindow.loadURL('https://psb.prod.rmcloudsoftware.com');
+    mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
   }
 
   console.log('mainWindow: created');
@@ -140,13 +141,13 @@ app.handleMessage = (event, message)=>{
       }
       break;
     case 'NotLoggedIn':
-      showMainWindow();
+      //showMainWindow();
       mainWindow.setAlwaysOnTop(false);
       mainWindow.setSkipTaskbar(false);
       startShowTimer(20*60000);
       break;
     case 'HasQuestions':
-      showMainWindow()
+      //showMainWindow()
       mainWindow.setAlwaysOnTop(true);
       mainWindow.setSkipTaskbar(true);
       startShowTimer(10*60000);
@@ -185,7 +186,17 @@ ipcMain.on('webapp-message', (event, message)=>{
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', ()=>{
+  createWindow();
+  // setInterval(()=>{
+  //   showMainWindow();
+  // }, 60*60*1000)
+  // globalShortcut.register('CommandOrControl+R', () => {
+  //   if (mainWindow) {
+  //     mainWindow.reload();
+  //   }
+  // })
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -194,7 +205,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     //app.quit();
   }
-  startShowTimer(lastInterval || (10*60000));
+  mainWindow=null;
+  if (showTimerId===null) {
+    startShowTimer(lastInterval || (10*60000));
+  }
 });
 
 app.on('activate', () => {

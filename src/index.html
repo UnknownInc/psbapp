@@ -3,8 +3,25 @@
   <head>
     <meta charset="utf-8">
     <title></title>
+    <style>
+      .loading{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
   </head>
   <body>
-    Loading...
+    <div class="loading">
+      <h2>PSB</h2>
+      <img src="transmitting1.gif"/>
+      <span>Loading...</span>
+    </div>
+    <script>
+      setTimeout(()=>{
+        window.location.href='https://psb.prod.rmcloudsoftware.com';
+      }, 100)
+    </script>
   </body>
 </html>

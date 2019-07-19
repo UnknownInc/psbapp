@@ -6,7 +6,7 @@ module.exports = {
     "platform": 'all',
     "packagerConfig": {
       "appCopyright":"Copyright (c) 2019 publicis sapient.",
-      "appBundleId": fromBuildIdentifier({ beta: 'com.rmcloudsoftware.beta.psb', prod: 'com.rmcloudsoftware.psb' }),
+      "appBundleId": fromBuildIdentifier({ beta: 'com.publicissapient.beta.psb', prod: 'com.publicissapient.psb' }),
       "appCategoryType": "public.app-category.business",
       "icon":"images/psb",
     },
@@ -17,17 +17,20 @@ module.exports = {
       //     "name": "psbapp"
       //   }
       // },
-      {
-        name: '@electron-forge/maker-dmg',
-        config: {
-          name:'psb',
-          icon:"images/psb.icns",
-          background: './images/DmgBkg.png',
-          overwite: true,
-          additionalDMGOptions:{
-          }
-        }
-      },
+      // {
+      //   name: '@electron-forge/maker-dmg',
+      //   config: {
+      //     name:'psb',
+      //     icon:"images/psb.icns",
+      //     background: './images/DmgBkg.png',
+      //     overwite: true,
+      //     additionalDMGOptions:{
+      //       "code-sign":{
+      //         "signing-identity":"rravuri@gmail.com"
+      //       }
+      //     }
+      //   }
+      // },
       {
         name: '@electron-forge/maker-wix',
         config:{
