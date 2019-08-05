@@ -137,6 +137,7 @@ app.handleMessage = (event, message)=>{
     case 'Snooze':
       if (mainWindow!==null) {
         mainWindow.close();
+        refresh=true;
         startShowTimer(parseInt(parts[1]||5*60000))
       }
       break;
@@ -144,12 +145,14 @@ app.handleMessage = (event, message)=>{
       //showMainWindow();
       mainWindow.setAlwaysOnTop(false);
       mainWindow.setSkipTaskbar(false);
+      refresh=true;
       startShowTimer(20*60000);
       break;
     case 'HasQuestions':
       //showMainWindow()
       mainWindow.setAlwaysOnTop(true);
       mainWindow.setSkipTaskbar(true);
+      refresh=true;
       startShowTimer(10*60000);
       break;
     case 'FinishedQuestions':{
@@ -188,14 +191,12 @@ ipcMain.on('webapp-message', (event, message)=>{
 // Some APIs can only be used after this event occurs.
 app.on('ready', ()=>{
   createWindow();
-  // setInterval(()=>{
-  //   showMainWindow();
-  // }, 60*60*1000)
-  // globalShortcut.register('CommandOrControl+R', () => {
-  //   if (mainWindow) {
-  //     mainWindow.reload();
-  //   }
-  // })
+  refresh=true;
+  startShowTimer(2*60000)
+  globalShortcut.register('CommandOrControl+R', () => {
+    refresh=true;
+    showMainWindow(); 
+  })
 });
 
 // Quit when all windows are closed.
