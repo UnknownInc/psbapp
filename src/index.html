@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title></title>
     <style>
-      .loading{
+      .loading {
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -15,13 +15,33 @@
   <body>
     <div class="loading">
       <h2>PSB</h2>
+      <h4>publicis sapient beat</h4>
       <img src="transmitting1.gif"/>
-      <span>Loading...</span>
+      <span>Waiting for connection...</span>
     </div>
     <script>
-      setTimeout(()=>{
+      function setLocation(){
         window.location.href='https://psb.prod.rmcloudsoftware.com';
-      }, 100)
+      }
+
+      function checkPing(){
+        fetch('https://psb.prod.rmcloudsoftware.com/ping')
+          .then(()=>{
+            setLocation();
+          })
+          .catch(err=>{
+            retryPing();
+          })
+      }
+
+      function retryPing(){
+        setTimeout(()=>{
+          checkPing();
+        }, 100)
+      }
+
+      checkPing();
+
     </script>
   </body>
 </html>

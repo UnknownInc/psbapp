@@ -1,10 +1,35 @@
 const path = require('path');
-const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
+const { app, net, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const isDev = require('electron-is-dev');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
   app.quit();
+}
+
+
+const gotTheLock = app.requestSingleInstanceLock()
+
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    showMainWindow();
+  })
+
+  // This method will be called when Electron has finished
+  // initialization and is ready to create browser windows.
+  // Some APIs can only be used after this event occurs.
+  app.on('ready', ()=>{
+    createWindow();
+    refresh=true;
+    startShowTimer(2*60000)
+    globalShortcut.register('CommandOrControl+Alt+R', () => {
+      refresh=true;
+      showMainWindow(); 
+    })
+  });
 }
 
 // if (!isDev) {
@@ -64,7 +89,8 @@ const createWindow = () => {
   // and load the index.html of the app.
   //mainWindow.loadURL(`file://${__dirname}/index.html`);
   if (process.env.NODE_ENV==='dev'){
-    mainWindow.loadURL('http://localhost:3000');
+    //mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
   } else {
     //mainWindow.loadURL('https://psb.prod.rmcloudsoftware.com');
     mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
@@ -96,20 +122,32 @@ ipcMain.on('online-status-changed', (event, status) => {
 
 
 const showMainWindow = () => {
-  console.log('SW');
-  firstTime=false;
-  if (mainWindow!==null) {
-    console.log('mainWindow: show')
-    if (refresh) {
-      refresh=false;
-      mainWindow.reload();
+
+  const request = net.request('https://psb.prod.rmcloudsoftware.com/ping');
+  request.on('response', (response) => {
+    if (!response){
+      return app.handleMessage(null, 'Snooze');
     }
-  } else  {
-    refresh=false;
-    createWindow();
-  }
-  mainWindow.show();
-  mainWindow.moveTop();
+    console.log(`PINGSTATUS: ${response.statusCode}`);
+    console.log('SW');
+    firstTime=false;
+    if (mainWindow!==null) {
+      console.log('mainWindow: show')
+      if (refresh) {
+        refresh=false;
+        mainWindow.reload();
+      }
+    } else  {
+      refresh=false;
+      createWindow();
+    }
+    mainWindow.show();
+    mainWindow.moveTop();
+  });
+  
+    request.on('error', (response) => {
+      app.handleMessage(null, 'Snooze')
+    })
 }
 
 let lastInterval;
@@ -138,8 +176,8 @@ app.handleMessage = (event, message)=>{
       if (mainWindow!==null) {
         mainWindow.close();
         refresh=true;
-        startShowTimer(parseInt(parts[1]||5*60000))
       }
+      startShowTimer(parseInt(parts[1]||5*60000))
       break;
     case 'NotLoggedIn':
       //showMainWindow();
@@ -174,7 +212,10 @@ app.handleMessage = (event, message)=>{
         tomorrow.setHours(8,Math.trunc(Math.random()*59),0)
         let timeinms=tomorrow.getTime()-today.getTime();
         refresh=true;
-        startShowTimer(timeinms);
+        //startShowTimer(timeinms);
+        setTimeout(()=>{
+          showMainWindow();
+        }, timeinms);
       }
       break;
     default:
@@ -185,19 +226,6 @@ app.handleMessage = (event, message)=>{
 ipcMain.on('webapp-message', (event, message)=>{
   app.handleMessage(event, message);
 })
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', ()=>{
-  createWindow();
-  refresh=true;
-  startShowTimer(2*60000)
-  globalShortcut.register('CommandOrControl+R', () => {
-    refresh=true;
-    showMainWindow(); 
-  })
-});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -222,6 +250,15 @@ app.on('activate', () => {
 
 app.on('before-quit', (e)=>{
   e.preventDefault();
+})
+
+
+app.on('will-quit', () => {
+  // Unregister a shortcut.
+  globalShortcut.unregister('CommandOrControl+Alt+R')
+
+  // Unregister all shortcuts.
+  globalShortcut.unregisterAll()
 })
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
