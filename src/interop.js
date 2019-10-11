@@ -2,10 +2,10 @@
 // Preload interop script
 // https://slack.engineering/interops-labyrinth-sharing-code-between-web-electron-apps-f9474d62eccc
 // ==============
-const { app, remote, ipcRenderer } = require('electron')
+const { remote, ipcRenderer } = require('electron')
 
 window.interop = {
-  appVersion: app.getVersion(),
+  //appVersion: app.getVersion(),
   status:{},
   sendMessage(message) {
     console.debug('sending message: '+message);

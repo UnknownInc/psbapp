@@ -1,5 +1,7 @@
 const path = require('path');
+const electron = require('electron');
 const { app, net, BrowserWindow, ipcMain, globalShortcut } = require('electron');
+const storage = require('electron-json-storage');
 const isDev = require('electron-is-dev');
 const log = require('electron-log');
 
@@ -32,14 +34,29 @@ if (!gotTheLock) {
   // Some APIs can only be used after this event occurs.
   app.on('ready', ()=>{
     createWindow();
-    refresh=true;
-    startShowTimer(2*60000)
     globalShortcut.register('CommandOrControl+Alt+R', () => {
       refresh=true;
       showMainWindow(); 
     })
-  });
-}
+
+    electron.powerMonitor.on('resume', ()=>{
+      let today = new Date();
+
+
+      storage.get('lastAnsweredDate', function(error, lastDate) {
+        if (error) {
+          console.error(error);
+          return;
+        }
+        log.debug('Last Answered Date: '+lastDate);
+        if (lastDate!==today.getDate()) {
+          refresh=true;
+          startShowTimer(2*MINUTES)
+        }
+      });//storage.get
+    });//resume
+  });//app ready
+};
 
 require('update-electron-app')({
   repo: 'UnknownInc/psbapp',
@@ -98,7 +115,7 @@ const createWindow = () => {
   mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
 
   log.debug('mainWindow: created');
-  // startShowTimer(showMainWindow, 15000);
+
   // Open the DevTools.
   if (isDev) {
     if (BrowserWindow.getDevToolsExtensions().hasOwnProperty('devtron')) {
@@ -223,7 +240,9 @@ app.handleMessage = (event, message)=>{
         tomorrow.setHours(8,Math.trunc(Math.random()*59),0)
         let timeinms=tomorrow.getTime()-today.getTime();
         refresh=true;
+        storage.set('lastAnsweredDate', today.getDate())
         //startShowTimer(timeinms);
+        log.info(`setting the wakeup time to ${tomorrow.toString()} in ${timeinms/(60*60000)} hours`)
         setTimeout(()=>{
           showMainWindow();
         }, timeinms);
