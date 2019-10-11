@@ -1,6 +1,16 @@
 const path = require('path');
 const { app, net, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const isDev = require('electron-is-dev');
+const log = require('electron-log');
+
+const MINUTES = 60000;
+
+const DEFAULT_SNOOZE_WAITTIME = 5 * MINUTES;
+
+const HASQUESTIONS_WAITTIME = 15 * MINUTES;
+const DEFAULT_WINDOWCLOSED_WAITTIME = 30 * MINUTES;
+const NOT_LOGGEDIN_WAITTIME = 25 * MINUTES;
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -16,8 +26,7 @@ if (!gotTheLock) {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
     // Someone tried to run a second instance, we should focus our window.
     showMainWindow();
-  })
-
+  })  
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
@@ -32,13 +41,11 @@ if (!gotTheLock) {
   });
 }
 
-// if (!isDev) {
-//   require('update-electron-app')({
-//     repo: 'UnknownInc/psbapp',
-//     updateInterval: '1 hour',
-//     //logger: require('electron-log')
-//   })
-// }
+require('update-electron-app')({
+  repo: 'UnknownInc/psbapp',
+  updateInterval: '1 hour',
+  logger: log
+})
 
 
 app.setLoginItemSettings({
@@ -51,7 +58,7 @@ try {
     app.dock.hide();
   } 
 } catch(err){
-  console.log(err);
+  log.error('Unable to hide the dock', err);
 }
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -63,13 +70,14 @@ let refresh = false;
 
 const createWindow = () => {
 
+  log.info('PSB app version: '+app.getVersion());
   if (onlineStatusWindow===null) {
     onlineStatusWindow = new BrowserWindow({ width: 0, height: 0, show: false })
     onlineStatusWindow.loadURL(`file://${__dirname}/online-status.html`)
   }
 
   const interopScript = path.join(__dirname,'interop.js');
-  console.log(interopScript);
+  log.debug(interopScript);
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: isDev?1224:800,
@@ -87,16 +95,9 @@ const createWindow = () => {
 
 
   // and load the index.html of the app.
-  //mainWindow.loadURL(`file://${__dirname}/index.html`);
-  if (process.env.NODE_ENV==='dev'){
-    //mainWindow.loadURL('http://localhost:3000');
-    mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
-  } else {
-    //mainWindow.loadURL('https://psb.prod.rmcloudsoftware.com');
-    mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
-  }
+  mainWindow.loadURL('file://'+path.join(__dirname,'index.html'));
 
-  console.log('mainWindow: created');
+  log.debug('mainWindow: created');
   // startShowTimer(showMainWindow, 15000);
   // Open the DevTools.
   if (isDev) {
@@ -107,59 +108,69 @@ const createWindow = () => {
 
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
-    console.log('mainWindow: closed');
+    log.debug('mainWindow: closed');
     refresh=true;
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    mainWindow = null;
+    mainWindow=null;
+    if (showTimerId===null) {
+      startShowTimer(lastInterval || (DEFAULT_WINDOWCLOSED_WAITTIME));
+    }
   });
 };
 
 ipcMain.on('online-status-changed', (event, status) => {
-  console.log(status);
+  log.debug(`online-status-changed: ${status}`);
 })
 
 
 const showMainWindow = () => {
-
   const request = net.request('https://psb.prod.rmcloudsoftware.com/ping');
   request.on('response', (response) => {
-    if (!response){
-      return app.handleMessage(null, 'Snooze');
-    }
-    console.log(`PINGSTATUS: ${response.statusCode}`);
-    console.log('SW');
-    firstTime=false;
-    if (mainWindow!==null) {
-      console.log('mainWindow: show')
-      if (refresh) {
+    log.debug(`PINGSTATUS: ${response.statusCode}`)
+    // log.debug(`HEADERS: ${JSON.stringify(response.headers)}`)
+    response.on('data', (chunk) => {
+      log.debug(`PINGBODY: ${chunk}`)
+      firstTime=false;
+      if (mainWindow!==null) {
+        if (refresh) {
+          log.debug('mainWindow: refresh')
+          refresh=false;
+          mainWindow.reload();
+        }
+      } else  {
         refresh=false;
-        mainWindow.reload();
+        createWindow();
       }
-    } else  {
-      refresh=false;
-      createWindow();
-    }
-    mainWindow.show();
-    mainWindow.moveTop();
-  });
-  
-    request.on('error', (response) => {
-      app.handleMessage(null, 'Snooze')
+      log.debug('mainWindow: show')
+      mainWindow.show();
+      mainWindow.moveTop();
     })
+
+    response.on('end', () => {
+      log.debug('No more data in response.')
+    })
+  });
+
+  request.on('error', (response) => {
+    log.error('ping error');
+    app.handleMessage(null, 'Snooze')
+  });
+
+  request.end();
 }
 
 let lastInterval;
 let showTimerId;
 const startShowTimer = (interval) => {
-  console.log('T:'+interval);
+  log.debug('T:'+interval);
   try {
     if (showTimerId) {
       clearInterval(showTimerId);
     }
   } catch(err) {
-    console.error(err);
+    log.error(err);
   }
 
   lastInterval=interval;
@@ -169,7 +180,7 @@ const startShowTimer = (interval) => {
 }
 
 app.handleMessage = (event, message)=>{
-  console.debug('receiving message: '+message);
+  log.debug('receiving message: '+message);
   const parts = message.split(':');
   switch(parts[0]) {
     case 'Snooze':
@@ -177,21 +188,21 @@ app.handleMessage = (event, message)=>{
         mainWindow.close();
         refresh=true;
       }
-      startShowTimer(parseInt(parts[1]||5*60000))
+      startShowTimer(parseInt(parts[1]||DEFAULT_SNOOZE_WAITTIME))
       break;
     case 'NotLoggedIn':
       //showMainWindow();
       mainWindow.setAlwaysOnTop(false);
       mainWindow.setSkipTaskbar(false);
       refresh=true;
-      startShowTimer(20*60000);
+      startShowTimer(NOT_LOGGEDIN_WAITTIME);
       break;
     case 'HasQuestions':
       //showMainWindow()
       mainWindow.setAlwaysOnTop(true);
       mainWindow.setSkipTaskbar(true);
       refresh=true;
-      startShowTimer(10*60000);
+      startShowTimer(HASQUESTIONS_WAITTIME);
       break;
     case 'FinishedQuestions':{
         try {
@@ -199,7 +210,7 @@ app.handleMessage = (event, message)=>{
             clearInterval(showTimerId);
           } 
         } catch(err) {
-          console.error(err);
+          log.error(err);
         }
 
         if (mainWindow) {
@@ -219,7 +230,7 @@ app.handleMessage = (event, message)=>{
       }
       break;
     default:
-      console.error('Unknown message', parts[0])
+      log.error('Unknown message', parts[0])
   }
 }
 
@@ -229,15 +240,13 @@ ipcMain.on('webapp-message', (event, message)=>{
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
+  log.debug('Lastwindow closed');
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') {
     //app.quit();
   }
   mainWindow=null;
-  if (showTimerId===null) {
-    startShowTimer(lastInterval || (10*60000));
-  }
 });
 
 app.on('activate', () => {
